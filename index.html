@@ -1,104 +1,291 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>壊れていくゲーム</title>
+<title>Broken Shooter</title>
 
 <style>
 
 body{
+margin:0;
+background:black;
+color:white;
 font-family:sans-serif;
 text-align:center;
-background:#222;
-color:white;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-overflow:hidden;
-transition:1s;
 }
 
-button{
-font-size:24px;
-padding:15px 30px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-background:orange;
+canvas{
+background:#111;
+display:block;
+margin:auto;
 }
 
-h1{
-margin-bottom:40px;
-transition:1s;
+#ui{
+padding:10px;
+font-size:18px;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<h1 id="title">ボタンを押してね</h1>
+<div id="ui">
+Score: <span id="score">0</span>　
+HP: <span id="hp">5</span>
+</div>
 
-<button id="btn">クリック</button>
+<canvas id="game" width="450" height="550"></canvas>
 
 <script>
 
-let level = 0
-const btn = document.getElementById("btn")
-const title = document.getElementById("title")
+const canvas = document.getElementById("game")
+const ctx = canvas.getContext("2d")
 
-btn.onclick = function(){
+let player = {x:225,y:500}
 
-level++
+let bullets=[]
+let enemies=[]
+let enemyBullets=[]
 
-if(level==1){
-title.innerText="いいね！もう一回！"
-}
+let score=0
+let hp=5
 
-else if(level==2){
-title.style.transform="rotate(10deg)"
-}
+let boss=null
+let bossHP=40
 
-else if(level==3){
-document.body.style.background="purple"
-}
+// プレイヤー移動
+document.addEventListener("mousemove",(e)=>{
 
-else if(level==4){
-btn.style.position="absolute"
-btn.style.left=Math.random()*80+"%"
-btn.style.top=Math.random()*80+"%"
-title.innerText="あれ？"
-}
+const rect=canvas.getBoundingClientRect()
 
-else if(level==5){
-document.body.style.transform="rotate(180deg)"
-title.innerText="画面が壊れてきた…"
-}
+player.x=e.clientX-rect.left
 
-else if(level==6){
-btn.style.fontSize="5px"
-title.innerText="ボタンが小さい！"
-}
+})
 
-else if(level==7){
-document.body.style.filter="hue-rotate(180deg)"
-title.innerText="色がおかしい"
-}
+// 弾発射
+document.addEventListener("click",()=>{
 
-else if(level==8){
-title.innerText="もうダメだ"
-btn.innerText="?"
-}
+bullets.push({x:player.x,y:player.y})
 
-else if(level==9){
-document.body.innerHTML="<h1>ゲームが壊れました</h1>"
-}
+})
+
+// 敵生成（少なめ）
+function spawnEnemy(){
+
+if(boss) return
+
+let x=Math.random()*430
+
+enemies.push({
+x:x,
+y:0,
+speed:1.5+Math.random()*1.5
+})
 
 }
+
+// 出現を遅く
+setInterval(spawnEnemy,1500)
+
+
+// 敵の弾（ゆっくり）
+function enemyShoot(){
+
+enemies.forEach(e=>{
+
+enemyBullets.push({
+x:e.x,
+y:e.y,
+vx:(Math.random()-0.5)*1.5,
+vy:3
+})
+
+})
+
+if(boss){
+
+for(let i=0;i<5;i++){
+
+enemyBullets.push({
+x:boss.x,
+y:boss.y,
+vx:(Math.random()-0.5)*3,
+vy:2.5
+})
+
+}
+
+}
+
+}
+
+// 発射間隔を遅く
+setInterval(enemyShoot,1800)
+
+
+function update(){
+
+// プレイヤー弾
+bullets.forEach(b=>b.y-=7)
+
+// 敵弾
+enemyBullets.forEach(b=>{
+b.x+=b.vx
+b.y+=b.vy
+})
+
+// 敵移動
+enemies.forEach(e=>{
+e.y+=e.speed
+})
+
+// ボス移動
+if(boss){
+boss.x+=Math.sin(Date.now()/400)*3
+}
+
+// 衝突判定
+bullets.forEach((b,bi)=>{
+
+enemies.forEach((e,ei)=>{
+
+if(Math.abs(b.x-e.x)<15 && Math.abs(b.y-e.y)<15){
+
+bullets.splice(bi,1)
+enemies.splice(ei,1)
+
+score++
+document.getElementById("score").innerText=score
+
+}
+
+})
+
+if(boss && Math.abs(b.x-boss.x)<35 && Math.abs(b.y-boss.y)<35){
+
+bullets.splice(bi,1)
+
+bossHP--
+
+if(bossHP<=0){
+
+boss=null
+
+alert("ボス撃破！ゲームクリア！")
+
+}
+
+}
+
+})
+
+// プレイヤー被弾
+enemyBullets.forEach((b,i)=>{
+
+if(Math.abs(b.x-player.x)<12 && Math.abs(b.y-player.y)<12){
+
+enemyBullets.splice(i,1)
+
+hp--
+
+document.getElementById("hp").innerText=hp
+
+if(hp<=0){
+
+alert("GAME OVER")
+
+location.reload()
+
+}
+
+}
+
+})
+
+// ボス出現
+if(score>=20 && !boss){
+
+boss={
+x:225,
+y:80
+}
+
+enemies=[]
+
+}
+
+}
+
+
+// 描画
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+// プレイヤー
+ctx.fillStyle="cyan"
+ctx.fillRect(player.x-10,player.y-10,20,20)
+
+// 弾
+ctx.fillStyle="yellow"
+
+bullets.forEach(b=>{
+
+ctx.fillRect(b.x-2,b.y-10,4,10)
+
+})
+
+// 敵
+ctx.fillStyle="red"
+
+enemies.forEach(e=>{
+
+ctx.fillRect(e.x-10,e.y-10,20,20)
+
+})
+
+// 敵弾
+ctx.fillStyle="orange"
+
+enemyBullets.forEach(b=>{
+
+ctx.fillRect(b.x-3,b.y-3,6,6)
+
+})
+
+// ボス
+if(boss){
+
+ctx.fillStyle="purple"
+
+ctx.fillRect(boss.x-35,boss.y-35,70,70)
+
+ctx.fillStyle="white"
+
+ctx.fillText("BOSS HP:"+bossHP,10,30)
+
+}
+
+}
+
+
+// ゲームループ
+function loop(){
+
+update()
+draw()
+
+requestAnimationFrame(loop)
+
+}
+
+loop()
 
 </script>
 
 </body>
 </html>
+
