@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>壊れていくゲーム</title>
+
+<style>
+
+body{
+font-family:sans-serif;
+text-align:center;
+background:#222;
+color:white;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+overflow:hidden;
+transition:1s;
+}
+
+button{
+font-size:24px;
+padding:15px 30px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+background:orange;
+}
+
+h1{
+margin-bottom:40px;
+transition:1s;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1 id="title">ボタンを押してね</h1>
+
+<button id="btn">クリック</button>
+
+<script>
+
+let level = 0
+const btn = document.getElementById("btn")
+const title = document.getElementById("title")
+
+btn.onclick = function(){
+
+level++
+
+if(level==1){
+title.innerText="いいね！もう一回！"
+}
+
+else if(level==2){
+title.style.transform="rotate(10deg)"
+}
+
+else if(level==3){
+document.body.style.background="purple"
+}
+
+else if(level==4){
+btn.style.position="absolute"
+btn.style.left=Math.random()*80+"%"
+btn.style.top=Math.random()*80+"%"
+title.innerText="あれ？"
+}
+
+else if(level==5){
+document.body.style.transform="rotate(180deg)"
+title.innerText="画面が壊れてきた…"
+}
+
+else if(level==6){
+btn.style.fontSize="5px"
+title.innerText="ボタンが小さい！"
+}
+
+else if(level==7){
+document.body.style.filter="hue-rotate(180deg)"
+title.innerText="色がおかしい"
+}
+
+else if(level==8){
+title.innerText="もうダメだ"
+btn.innerText="?"
+}
+
+else if(level==9){
+document.body.innerHTML="<h1>ゲームが壊れました</h1>"
+}
+
+}
+
+</script>
+
+</body>
+</html>
